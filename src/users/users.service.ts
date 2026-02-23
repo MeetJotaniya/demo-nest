@@ -4,14 +4,16 @@ import { UpdateUserDto } from './dto/update-user.dto';
 import { InjectRepository } from '@nestjs/typeorm';
 import { User } from './entities/user.entity';
 import { Repository } from 'typeorm';
-
+import * as bcrypt from 'bcrypt';
 @Injectable()
 export class UsersService {
-    findByName(name: string) {
-      return this.userRepo.findOneBy({
-        name,
-      }); 
-    }
+    async findByName(name: string) {
+  return this.userRepo
+    .createQueryBuilder('user')
+    .where('LOWER(user.name) = LOWER(:name)', { name })
+    .getOne();
+}
+
 
    constructor( 
     @InjectRepository(User) 
@@ -30,9 +32,15 @@ export class UsersService {
     return this.userRepo.findOneBy({id});
   }
 
-  update(id: number, updateUserDto: UpdateUserDto) {
-    return this.userRepo.update(id,updateUserDto);
+  async update(id: number, updateUserDto: UpdateUserDto) {
+  if (updateUserDto.password) {
+    updateUserDto.password = await bcrypt.hash(updateUserDto.password, 10);
   }
+
+  await this.userRepo.update(id, updateUserDto);
+
+  return this.userRepo.findOneBy({ id });
+}
 
   remove(id: number) {
     return this.userRepo.delete(id);

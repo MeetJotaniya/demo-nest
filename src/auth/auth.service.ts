@@ -11,22 +11,26 @@ export class AuthService {
   ) {}
 
    async signUp(data: any) {
-    const hashedPass = await bcrypt.hash(data.password, 10);
-    return this.usersService.create({ ...data, password: hashedPass });
-  }
+  data.name = data.name.toLowerCase();
+  const hashedPass = await bcrypt.hash(data.password, 10);
+  return this.usersService.create({ ...data, password: hashedPass });
+}
 
   async signIn(name: string, password: string) {
+  name = name.toLowerCase(); // ← add this
   const user = await this.usersService.findByName(name);
-  console.log("User found:", user);
 
-  if (!user) throw new UnauthorizedException('User not found');
+  if (!user) {
+    throw new UnauthorizedException('Invalid name');
+  }
 
   const isMatch = await bcrypt.compare(password, user.password);
-  console.log("Password match:", isMatch);
-
-  if (!isMatch) throw new UnauthorizedException('Invalid password');
+  if (!isMatch) {
+    throw new UnauthorizedException('Invalid password');
+  }
 
   const token = this.jwtService.sign({ id: user.id, name: user.name });
+
   return { message: 'Login successful', token };
 }
 }

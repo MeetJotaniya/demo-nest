@@ -13,8 +13,8 @@ export class AuthController {
 
   @Post('signin')
   signIn(@Body() body) {
-    return this.authService.signIn(body.email, body.password);
-  }
+  return this.authService.signIn(body.name, body.password);
+}
 
     @UseGuards(AuthGuard('jwt'))
     @Get('profile')
